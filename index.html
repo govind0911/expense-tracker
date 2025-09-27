@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Expense Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg: #f6fbff;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent-blue: #a9def9;
+      --accent-green: #c9f7d7;
+      --danger: #ff6b6b;
+      --glass: rgba(255,255,255,0.6);
+      --shadow: 0 6px 18px rgba(26,38,63,0.08);
+      --radius: 14px;
+      --text: #112;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Poppins',system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background: radial-gradient(1200px 400px at 10% 10%, rgba(169,222,249,0.25), transparent 10%),
+                  radial-gradient(800px 300px at 90% 90%, rgba(201,247,215,0.2), transparent 10%),
+                  var(--bg);
+      color:var(--text);
+      padding:28px;
+    }
+    .container{max-width:1100px;margin:0 auto;}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .greet h1{margin:0;font-size:22px;font-weight:700;overflow:hidden;white-space:nowrap;border-right:2px solid var(--accent-blue);width:0;animation:typing 3s steps(30) forwards}
+    @keyframes typing{from{width:0}to{width:100%}}
+    .greet p{margin:4px 0 0;color:var(--muted)}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .btn{background:var(--card);border:none;padding:10px 14px;border-radius:12px;cursor:pointer;box-shadow:var(--shadow);transition:transform .18s ease,box-shadow .18s ease;display:inline-flex;align-items:center;gap:8px;color:var(--text)}
+    .btn:hover{transform:scale(1.03)}
+    .btn.primary{background:linear-gradient(135deg,var(--accent-blue),var(--accent-green));color:#033;font-weight:600}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:18px 0}
+    .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .card h3{margin:0;font-size:14px;color:var(--muted)}
+    .big{font-size:20px;font-weight:700;margin-top:8px}
+    .progress{height:12px;background:linear-gradient(90deg,var(--accent-green),var(--accent-blue));border-radius:99px;overflow:hidden}
+    .progress .bar{height:100%;background:linear-gradient(90deg,#ffd56b,#ffd56b);width:0%;transition:width .6s ease}
+    #warning{display:none;text-align:center;margin-top:12px}
+    #warning h2{color:red;font-size:24px}
+    .float-wrap{position:absolute;inset:0;pointer-events:none}
+    .float{position:absolute;font-size:22px;opacity:0.95;animation:floatY 6s ease-in-out infinite;transform-origin:center}
+    .float.x1{left:10%;top:10%;animation-duration:5s}
+    .float.x2{left:80%;top:20%;animation-duration:7s}
+    .float.x3{left:50%;top:70%;animation-duration:6.5s}
+    @keyframes floatY{0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-18px) rotate(12deg)}100%{transform:translateY(0) rotate(0)}}
+    #dashboard{margin-top:28px}
+    .grid-2{display:grid;grid-template-columns:1fr 420px;gap:16px}
+    .chart-card{padding:12px}
+    table{width:100%;border-collapse:collapse}
+    thead th{text-align:left;color:var(--muted);font-weight:600;font-size:13px;padding:8px}
+    tbody td{padding:10px 8px;border-top:1px solid #f1f3f4;vertical-align:middle}
+    tbody tr{transition:transform .12s ease,box-shadow .12s ease;background:transparent}
+    tbody tr:hover{transform:translateX(6px);box-shadow:0 6px 18px rgba(16,24,40,0.06);background:linear-gradient(90deg,rgba(255,255,255,0.6),rgba(255,255,255,0.8))}
+    .icon-circle{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;margin-right:8px;background:linear-gradient(180deg,rgba(0,0,0,0.03),rgba(0,0,0,0.02))}
+    .muted-small{color:var(--muted);font-size:13px}
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,10,18,0.35);backdrop-filter:blur(4px);display:none}
+    .modal.show{display:flex}
+    .modal-card{background:var(--card);padding:18px;border-radius:14px;min-width:320px;box-shadow:var(--shadow);color:var(--text)}
+    .form-row{display:flex;flex-direction:column;margin-bottom:10px}
+    .form-row label{font-size:13px;color:var(--muted);margin-bottom:6px}
+    .form-row input,.form-row select{padding:10px;border-radius:10px;border:1px solid #eef3f7}
+    .toast{position:fixed;right:22px;bottom:22px;background:#033;color:#fff;padding:10px 14px;border-radius:10px;transform:translateY(16px);opacity:0;transition:all .35s ease}
+    .toast.show{transform:translateY(0);opacity:1}
+    @media (max-width:900px){.cards{grid-template-columns:repeat(1,1fr)}.grid-2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="greet">
+        <h1>Hi Mithun, how are you?</h1>
+        <p class="muted-small">Welcome back — here's your money overview.</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="jumpBtn">My Expenses This Month</button>
+        <button class="btn" id="settingsBtn">⚙️ Settings</button>
+        <button class="btn primary" id="addBtn">+ Add Expense</button>
+      </div>
+    </header>
+
+    <section class="cards">
+      <div class="card">
+        <div class="float-wrap">
+          <div class="float x1">💸</div>
+          <div class="float x2">🪙</div>
+          <div class="float x3">💰</div>
+        </div>
+        <h3>Current Balance</h3>
+        <div class="big" id="balance">₹10,000</div>
+        <p class="muted-small">Available to spend</p>
+      </div>
+
+      <div class="card">
+        <h3>Monthly Limit</h3>
+        <div class="big" id="limit">₹1,000</div>
+        <div style="margin-top:8px" class="muted-small">Use this to stay on track</div>
+        <div style="margin-top:12px"><div class="progress"><div class="bar" id="limitBar"></div></div></div>
+        <div id="warning"><h2>⚠️ OVER LIMIT ⚠️</h2><img src="https://i.imgflip.com/30zz5g.jpg" alt="Meme" style="max-width:100%;border-radius:10px;margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <h3>This Month</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <div><div class="muted-small">Total Spent</div><div class="big" id="spent">₹0</div></div>
+          <div style="text-align:right"><div class="muted-small">Remaining</div><div class="big" id="remaining">₹10,000</div></div>
+        </div>
+        <p style="margin-top:12px" id="friendlyMsg" class="muted-small">You are doing great! Keep it up!</p>
+      </div>
+    </section>
+
+    <hr style="border:none;height:1px;background:linear-gradient(90deg,transparent,#eee,transparent);margin:18px 0">
+
+    <section id="dashboard">
+      <div class="grid-2">
+        <div class="card chart-card">
+          <h3 style="margin-bottom:8px">Daily Expenses (This Month)</h3>
+          <canvas id="dailyChart" height="160"></canvas>
+          <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
+            <div style="flex:1">
+              <h3 style="margin:0 0 6px 0;font-size:13px;color:var(--muted)">Category Breakdown</h3>
+              <canvas id="pieChart" height="120"></canvas>
+            </div>
+            <div style="width:160px;background:var(--card);padding:12px;border-radius:10px;box-shadow:var(--shadow)">
+              <div class="muted-small">Quick Summary</div>
+              <div style="margin-top:8px;font-weight:700" id="quickSpent">₹0 spent</div>
+              <div style="margin-top:10px" class="muted-small">Tip: Add small purchases to stay accurate.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="max-height:520px;overflow:auto">
+          <h3 style="margin-bottom:8px">Transactions</h3>
+          <table><thead><tr><th>Date</th><th>Item</th><th>Amount</th></tr></thead><tbody id="txTable"></tbody></table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal" id="modal"><div class="modal-card">
+    <h3>Add Expense</h3>
+    <div class="form-row"><label>Item Name</label><input id="itemName" placeholder="e.g., Pen, Snacks"></div>
+    <div class="form-row"><label>Amount</label><input id="amount" type="number" placeholder="e.g., 50"></div>
+    <div class="form-row"><label>Category</label><select id="category"><option value="stationery">Stationery</option><option value="food">Food</option><option value="other">Other</option></select></div>
+    <div class="form-row"><label>Date</label><input id="date" type="date"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn" id="cancel">Cancel</button><button class="btn primary" id="save">Add</button></div>
+  </div></div>
+
+  <div class="modal" id="settingsModal"><div class="modal-card">
+    <h3>⚙️ Settings</h3>
+    <div class="form-row"><label>Edit Balance</label><input id="editBalance" type="number"></div>
+    <div class="form-row"><label>Edit Monthly Limit</label><input id="editLimit" type="number"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn" id="settingsCancel">Cancel</button><button class="btn primary" id="settingsSave">Save</button></div>
+  </div></div>
+
+  <div class="toast" id="toast">Expense Added!</div>
+
+  <script>
+    const LS_KEY = 'studentExpenses_v1';
+    const defaults = { settings:{ balance:10000, limit:1000 }, transactions:[] };
+    const $ = (s)=>document.querySelector(s);
+    function loadData(){try{const raw=localStorage.getItem(LS_KEY);if(!raw){localStorage.setItem(LS_KEY,JSON.stringify(defaults));return JSON.parse(JSON.stringify(defaults));}return JSON.parse(raw);}catch(e){localStorage.setItem(LS_KEY,JSON.stringify(defaults));return JSON.parse(JSON.stringify(defaults));}}
+    function saveData(d){localStorage.setItem(LS_KEY,JSON.stringify(d));}
+    let data=loadData();
+    const balanceEl=$('#balance'),limitEl=$('#limit'),spentEl=$('#spent'),remainingEl=$('#remaining'),warningEl=$('#warning'),limitBar=$('#limitBar'),friendlyMsg=$('#friendlyMsg'),txTable=$('#txTable'),quickSpent=$('#quickSpent');
+    const dailyCtx=document.getElementById('dailyChart').getContext('2d');const pieCtx=document.getElementById('pieChart').getContext('2d');let dailyChart=null,pieChart=null;
+    $('#addBtn').addEventListener('click',()=>openModal());$('#cancel').addEventListener('click',()=>closeModal());$('#jumpBtn').addEventListener('click',()=>document.getElementById('dashboard').scrollIntoView({behavior:'smooth'}));
+    $('#settingsBtn').addEventListener('click',()=>openSettings());$('#settingsCancel').addEventListener('click',()=>closeSettings());$('#settingsSave').addEventListener('click',()=>{const bal=Number($('#editBalance').value)||data.settings.balance;const lim=Number($('#editLimit').value)||data.settings.limit;data.settings.balance=bal;data.settings.limit=lim;saveData(data);updateAll();closeSettings();showToast('Settings Saved!');});
+    $('#date').value=new Date().toISOString().substring(0,10);
+    $('#save').addEventListener('click',()=>{const name=$('#itemName').value.trim();const amt=Number($('#amount').value);const cat=$('#category').value;const dateVal=$('#date').value;if(!name||!amt||amt<=0){alert('Enter valid item and amount');return;}const tx={id:Date.now(),name,amount:amt,category:cat,date:new Date(dateVal).toISOString()};data.transactions.push(tx);saveData(data);updateAll();closeModal();showToast('Expense Added!');$('#itemName').value='';$('#amount').value='';$('#date').value=new Date().toISOString().substring(0,10);});
+    function openModal(){$('#modal').classList.add('show');}
+    function closeModal(){$('#modal').classList.remove('show');}
+    function openSettings(){$('#settingsModal').classList.add('show');$('#editBalance').value=data.settings.balance;$('#editLimit').value=data.settings.limit;}
+    function closeSettings(){$('#settingsModal').classList.remove('show');}
+    function showToast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+    function fmt(a){return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(a);}
+    function toFriendlyDate(iso){return new Date(iso).toLocaleDateString('en-IN');}
+    function getThisMonthTransactions(){const now=new Date();const y=now.getFullYear(),m=now.getMonth();return data.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===y&&d.getMonth()===m;});}
+    function iconFor(tx){if(tx.category==='stationery')return'✏️';if(tx.category==='food')return'🍔';return'💸';}
+    function renderTable(){const txs=getThisMonthTransactions().sort((a,b)=>new Date(b.date)-new Date(a.date));txTable.innerHTML='';if(txs.length===0){txTable.innerHTML='<tr><td colspan="3" class="muted-small">No transactions yet.</td></tr>';return;}for(const t of txs){const tr=document.createElement('tr');tr.innerHTML=`<td>${toFriendlyDate(t.date)}</td><td><div style="display:flex;align-items:center"><div class="icon-circle">${iconFor(t)}</div><div><div style="font-weight:600">${t.name}</div><div class="muted-small">${t.category}</div></div></div></td><td style="font-weight:700">${fmt(Number(t.amount))}</td>`;txTable.appendChild(tr);}}
+    function summaryThisMonth(){const txs=getThisMonthTransactions();const totalSpent=txs.reduce((s,t)=>s+Number(t.amount||0),0);return{totalSpent,txs};}
+    function updateSummaryUI(){const settings=data.settings;const s=summaryThisMonth();const remaining=settings.balance-s.totalSpent;balanceEl.textContent=fmt(settings.balance);limitEl.textContent=fmt(settings.limit);spentEl.textContent=fmt(s.totalSpent);remainingEl.textContent=fmt(Math.max(0,remaining));quickSpent.textContent=`${fmt(s.totalSpent)} spent`;const perc=Math.min(100,Math.round((s.totalSpent/Math.max(1,settings.limit))*100));limitBar.style.width=perc+'%';if(s.totalSpent>settings.limit){warningEl.style.display='block';friendlyMsg.textContent='Limit exceeded!';friendlyMsg.style.color='var(--danger)';}else{warningEl.style.display='none';friendlyMsg.textContent='You are doing great! Keep it up!';friendlyMsg.style.color='inherit';}animateCounters();}
+    function animateCounters(){[balanceEl,limitEl,spentEl,remainingEl].forEach(el=>{el.style.transform='translateY(6px)';el.style.transition='transform .28s ease';requestAnimationFrame(()=>el.style.transform='translateY(0)');});}
+    function updateCharts(){const now=new Date();const year=now.getFullYear(),month=now.getMonth();const daysInMonth=new Date(year,month+1,0).getDate();const labels=Array.from({length:daysInMonth},(_,i)=>String(i+1));const daySums=new Array(daysInMonth).fill(0);getThisMonthTransactions().forEach(t=>{const d=new Date(t.date);const day=d.getDate();daySums[day-1]+=Number(t.amount||0);});if(dailyChart)dailyChart.destroy();dailyChart=new Chart(dailyCtx,{type:'bar',data:{labels,datasets:[{label:'Daily Spend',data:daySums,backgroundColor:'rgba(10,110,130,0.12)',borderColor:'rgba(10,110,130,0.6)',borderWidth:1}]},options:{scales:{y:{beginAtZero:true}}}});const cats={stationery:0,food:0,other:0};getThisMonthTransactions().forEach(t=>{cats[t.category]+=Number(t.amount||0);});if(pieChart)pieChart.destroy();pieChart=new Chart(pieCtx,{type:'pie',data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#a9def9','#c9f7d7','#ffd56b']}]} });}
+    function updateAll(){renderTable();updateSummaryUI();updateCharts();}
+    updateAll();
+  </script>
+</body>
+</html>

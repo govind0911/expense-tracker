@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homepage - Expense Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #f6fbff;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent-blue: #2563eb;
+      --glass: rgba(255,255,255,0.65);
+      --shadow: 0 6px 18px rgba(26,38,63,0.12);
+      --radius: 14px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:'Poppins',system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background: radial-gradient(1200px 400px at 10% 10%, rgba(169,222,249,0.25), transparent 10%),
+                  radial-gradient(800px 300px at 90% 90%, rgba(201,247,215,0.2), transparent 10%),
+                  var(--bg);
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;
+      color:#112;
+      padding: 20px;
+    }
+    .card{
+      background:var(--card);
+      padding:28px;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      width:100%;
+      max-width:1000px;
+      position:relative;
+      overflow:hidden;
+      animation:fadeIn .8s ease;
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    h2{text-align:center;font-weight:700;margin-bottom:18px}
+    .form-row{display:flex;flex-direction:column;margin-bottom:14px}
+    .form-row label{margin-bottom:6px;color:var(--muted);font-size:14px}
+    .form-row input{padding:12px;border-radius:10px;border:1px solid #eef3f7;font-size:15px;}
+    .btn{
+      background:var(--accent-blue);border:none;padding:12px;border-radius:12px;
+      cursor:pointer;color:#fff;font-weight:600;transition:.2s;
+    }
+    .btn:hover{background:#1e4fc1;transform:scale(1.03)}
+    .float-wrap{position:absolute;inset:0;pointer-events:none}
+    .float{position:absolute;font-size:22px;opacity:0.8;animation:floatY 6s ease-in-out infinite}
+    .x1{left:10%;top:10%;animation-duration:5s}
+    .x2{left:80%;top:20%;animation-duration:7s}
+    .x3{left:50%;top:70%;animation-duration:6.5s}
+    @keyframes floatY{0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-18px) rotate(12deg)}100%{transform:translateY(0) rotate(0)}}
+    #welcome{display:none}
+    #welcome h1{font-size:26px;margin-bottom:6px;text-align:center;animation:typing 3s steps(22) 1s forwards;overflow:hidden;white-space:nowrap;border-right:2px solid var(--accent-blue);width:0}
+    #datetime{text-align:center;color:var(--muted);margin-bottom:22px;font-size:14px}
+    @keyframes typing{from{width:0}to{width:100%}}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+    .card-small{background:var(--glass);backdrop-filter:blur(12px);border-radius:var(--radius);padding:18px;text-align:center;box-shadow:var(--shadow);animation:pop .6s ease;transition:transform .25s ease;}
+    .card-small:hover{transform:translateY(-6px) scale(1.03)}
+    .card-small h3{font-size:16px;font-weight:600;margin-bottom:6px}
+    .card-small p{font-size:14px;font-weight:500}
+    @keyframes pop{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+    .quick-actions{text-align:center;margin-bottom:22px}
+    .quick-actions button{margin:6px}
+    .activity{background:var(--glass);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px}
+    .activity h3{font-size:18px;margin-bottom:10px}
+    .activity ul{list-style:none;font-size:14px;color:#333}
+    .activity li{margin:6px 0;padding:6px;border-bottom:1px solid #eef3f7}
+    .activity li:last-child{border:none}
+    .quote{text-align:center;margin-top:20px;font-style:italic;color:var(--muted)}
+    .logout{text-align:center;margin-top:24px}
+    .newsletter{background:var(--glass);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow);margin-top:20px}
+    .newsletter h3{margin-bottom:10px}
+    .newsletter p{color:var(--muted);font-size:14px;margin-bottom:12px}
+    .newsletter a{display:block;margin-bottom:8px;color:var(--accent-blue);text-decoration:none}
+    .newsletter a:hover{text-decoration:underline}
+    .header-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="float-wrap">
+      <div class="float x1">💸</div>
+      <div class="float x2">🪙</div>
+      <div class="float x3">💰</div>
+    </div>
+
+    <div id="login">
+      <h2>Login</h2>
+      <div class="form-row"><label>Username</label><input type="text" id="username"></div>
+      <div class="form-row"><label>Password</label><input type="password" id="password"></div>
+      <button class="btn" style="width:100%" onclick="login()">Login</button>
+    </div>
+
+    <div id="welcome">
+      <div class="header-actions">
+        <h1>Hi Mithun, how are you :)</h1>
+        <button class="btn" onclick="goSettings()">⚙️ Settings</button>
+      </div>
+      <div id="datetime"></div>
+
+      <div class="grid">
+        <div class="card-small"><h3>Balance</h3><p id="liveBalance">₹ 0</p></div>
+        <div class="card-small"><h3>Income</h3><p>₹ 15,000</p></div>
+        <div class="card-small"><h3>Expenses</h3><p>₹ 8,500</p></div>
+        <div class="card-small"><h3>Investments</h3><p>₹ 15,200</p></div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="btn" onclick="goReports()">📊 Reports</button>
+      </div>
+
+      <div class="activity">
+        <h3>Recent Activity</h3>
+        <ul>
+          <li>Received ₹2000 - Freelance Project</li>
+          <li>Paid ₹500 - Electricity Bill</li>
+          <li>Received ₹1500 - Bank Transfer</li>
+          <li>Paid ₹800 - Shopping</li>
+        </ul>
+      </div>
+
+      <div class="newsletter">
+        <h3>📢 Finance Newsletter</h3>
+        <p>Stay updated with the latest money tips & finance news:</p>
+        <a href="https://economictimes.indiatimes.com/wealth" target="_blank">Economic Times - Wealth</a>
+        <a href="https://www.moneycontrol.com/" target="_blank">Moneycontrol Finance</a>
+        <a href="https://www.investopedia.com/" target="_blank">Investopedia</a>
+      </div>
+
+      <div class="quote">“Do not save what is left after spending, but spend what is left after saving.”</div>
+      <div class="logout"><button class="btn" onclick="logout()">Logout</button></div>
+    </div>
+  </div>
+
+  <script>
+    const LS_KEY = 'studentExpenses_v1';
+    function getBalance(){
+      try{ const raw = localStorage.getItem(LS_KEY); if(!raw) return 0;
+        const data = JSON.parse(raw); return data.settings?.balance || 0;
+      }catch(e){ return 0; }
+    }
+    function login(){
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      if(user === "mithun" && pass === "mithun"){
+        document.getElementById("login").style.display = "none";
+        document.getElementById("welcome").style.display = "block";
+        updateDateTime();
+        updateBalance();
+      }else{ alert("Invalid username or password!"); }
+    }
+    function logout(){ location.reload(); }
+    function updateDateTime(){
+      document.getElementById("datetime").innerText = new Date().toLocaleString();
+      setTimeout(updateDateTime, 1000);
+    }
+    function goReports(){ window.location.href = "index.html#dashboard"; }
+    function goSettings(){ window.location.href = "index.html#settingsModal"; }
+    function updateBalance(){ document.getElementById("liveBalance").innerText = "₹ " + getBalance(); }
+    setInterval(updateBalance, 2000);
+  </script>
+</body>
+</html>
