@@ -2,106 +2,156 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Homepage - Expense Tracker</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Expense Tracker Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg:#f6fbff;--card:#fff;--muted:#6b7280;--accent:#2563eb;--shadow:0 6px 18px rgba(26,38,63,.12);--radius:14px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Poppins,sans-serif;background:var(--bg);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-.card{background:#fff;max-width:1000px;width:100%;padding:28px;border-radius:var(--radius);box-shadow:var(--shadow)}
-.btn{background:var(--accent);color:#fff;border:none;padding:12px;border-radius:12px;cursor:pointer}
-.btn:hover{transform:translateY(-2px)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
-.card-small{padding:18px;border-radius:14px;background:rgba(255,255,255,.7);box-shadow:var(--shadow);transition:.25s}
-.card-small:hover{transform:translateY(-6px)}
-#welcome{display:none}
-#datetime{text-align:center;color:var(--muted);margin:10px 0 20px}
+:root{--bg:#f6fbff;--card:#fff;--muted:#6b7280;--shadow:0 6px 18px rgba(26,38,63,.08);--radius:14px}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;font-family:Poppins,sans-serif;background:var(--bg)}
+.container{max-width:1200px;margin:auto}
+.header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{border:none;padding:10px 14px;border-radius:12px;cursor:pointer}
+.primary{background:#2563eb;color:#fff}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:20px 0}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-card{background:#fff;padding:20px;border-radius:14px;width:350px}
+input,select{width:100%;padding:10px;margin:5px 0 12px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="card">
-<div id="login">
-<h2>Login</h2><br>
-<input id="username" placeholder="Username" style="width:100%;padding:12px"><br><br>
-<input id="password" type="password" placeholder="Password" style="width:100%;padding:12px"><br><br>
-<button class="btn" style="width:100%" onclick="login()">Login</button>
+<div class="container">
+<div class="header">
+<div>
+<h1>Expense Tracker</h1>
+<p id="userText"></p>
+</div>
+<div>
+<button class="btn" onclick="location.href='homepage.html'">🏠 Home</button>
+<button class="btn primary" onclick="openModal()">+ Add Expense</button>
+</div>
 </div>
 
-<div id="welcome">
-<h1 id="welcomeText"></h1>
-<div id="datetime"></div>
+<div class="cards">
+<div class="card"><h3>Balance</h3><h2 id="balance"></h2></div>
+<div class="card"><h3>Total Spent</h3><h2 id="spent"></h2></div>
+<div class="card"><h3>Monthly Limit</h3><h2 id="limit"></h2></div>
+<div class="card"><h3>Transactions</h3><h2 id="txcount"></h2></div>
+</div>
 
 <div class="grid">
-<div class="card-small"><h3>Balance</h3><p id="liveBalance">₹0</p></div>
-<div class="card-small"><h3>Income</h3><p id="income">₹15000</p></div>
-<div class="card-small"><h3>Expenses</h3><p id="expenses">₹0</p></div>
-<div class="card-small"><h3>Transactions</h3><p id="txcount">0</p></div>
+<div class="card">
+<h3>Expense Trend</h3>
+<canvas id="chart"></canvas>
 </div>
 
-<br>
-<button class="btn" onclick="location.href='index.html'">📊 Open Dashboard</button>
-<button class="btn" onclick="logout()">Logout</button>
+<div class="card">
+<h3>Recent Transactions</h3>
+<table>
+<thead><tr><th>Item</th><th>Amount</th></tr></thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="modal" id="modal">
+<div class="modal-card">
+<h3>Add Expense</h3>
+<input id="item" placeholder="Item">
+<input id="amount" type="number" placeholder="Amount">
+<select id="category">
+<option>Food</option>
+<option>Stationery</option>
+<option>Other</option>
+</select>
+<button class="btn primary" onclick="saveExpense()">Save</button>
+<button class="btn" onclick="closeModal()">Cancel</button>
 </div>
 </div>
 
 <script>
-const LS_KEY='studentExpenses_v1';
+const KEY='studentExpenses_v1';
 
-function loadData(){
-try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}
-catch{return {}}
+function load(){
+let d=JSON.parse(localStorage.getItem(KEY)||'{}');
+if(!d.settings)d.settings={balance:10000,limit:1000};
+if(!d.transactions)d.transactions=[];
+return d;
 }
 
-function updateDateTime(){
-document.getElementById('datetime').textContent=new Date().toLocaleString();
-}
-setInterval(updateDateTime,1000);
-
-function updateStats(){
-const data=loadData();
-const balance=data.settings?.balance||0;
-const tx=data.transactions||[];
-const spent=tx.reduce((a,b)=>a+Number(b.amount||0),0);
-
-liveBalance.textContent='₹ '+balance;
-expenses.textContent='₹ '+spent;
-txcount.textContent=tx.length;
+function save(d){
+localStorage.setItem(KEY,JSON.stringify(d));
 }
 
-function login(){
-const user=username.value.trim();
-const pass=password.value.trim();
+let data=load();
 
-if(!user||!pass){
-alert('Enter username and password');
-return;
+function updateUI(){
+balance.textContent='₹'+data.settings.balance;
+limit.textContent='₹'+data.settings.limit;
+
+const spentTotal=data.transactions.reduce((s,t)=>s+Number(t.amount||0),0);
+spent.textContent='₹'+spentTotal;
+txcount.textContent=data.transactions.length;
+
+tableBody.innerHTML='';
+data.transactions.slice().reverse().slice(0,10).forEach(t=>{
+tableBody.innerHTML+=`<tr><td>${t.name}</td><td>₹${t.amount}</td></tr>`;
+});
+
+renderChart();
 }
 
-localStorage.setItem('expense_user',user);
-localStorage.setItem('expense_logged_in','true');
+function renderChart(){
+const ctx=document.getElementById('chart');
+if(window.myChart)window.myChart.destroy();
 
-showDashboard();
+window.myChart=new Chart(ctx,{
+type:'bar',
+data:{
+labels:data.transactions.map(t=>t.name),
+datasets:[{
+label:'Expenses',
+data:data.transactions.map(t=>t.amount)
+}]
+}
+});
 }
 
-function showDashboard(){
-const user=localStorage.getItem('expense_user')||'User';
-login.style.display='none';
-welcome.style.display='block';
-welcomeText.textContent=`Hi ${user}, how are you :)`;
-updateDateTime();
-updateStats();
+function openModal(){modal.classList.add('show');}
+function closeModal(){modal.classList.remove('show');}
+
+function saveExpense(){
+const name=item.value.trim();
+const amountVal=Number(amount.value);
+
+if(!name||amountVal<=0)return;
+
+data.transactions.push({
+name:name,
+amount:amountVal,
+category:category.value,
+date:new Date().toISOString()
+});
+
+save(data);
+updateUI();
+closeModal();
+
+item.value='';
+amount.value='';
 }
 
-function logout(){
-localStorage.removeItem('expense_logged_in');
-localStorage.removeItem('expense_user');
-location.reload();
-}
+userText.textContent='Logged in as '+(localStorage.getItem('expense_user')||'User');
 
-if(localStorage.getItem('expense_logged_in')==='true'){
-showDashboard();
-}
+updateUI();
 </script>
 </body>
 </html>
